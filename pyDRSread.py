@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 
 from copy import deepcopy
 
@@ -8,29 +9,19 @@ throughout the file)
 """
 class Channel:
 	
-	
-	self.binWidth = [0.0]*1024 #Time bin width, in nanoseconds. Float
-	self.voltages = [0]*1024 #List to be populated by the calculated proper voltages
-	self.times = [0.0]*1024 
-	
 	""" Constructor, takes channel number
 	"""
 	def __init__(self, no):
 		self.number = no
-	
+		self.binWidth = [0.0]*1024 #Time bin width, in nanoseconds. Float
+		self.voltages = [0]*1024 #List to be populated by the calculated proper voltages
+		self.times = [0.0]*1024 #List to be populated by the times of an event
 		
 	def setBinWidths(self, inWidths):
 		self.binWidth = inWidths
 
 
 class Event:
-	
-	self.serialNumber = 0 #Serial number of event
-	self.rangeCenter = 0 #Range center of voltages in event.
-	self.rawVoltages = [0]*1024 #List of 1024 2-byte integers. 0 is RC-0.5 V, 65535 is RC+0.5V
-	
-	self.channelList = []
-	
 	
 	#time, to be implemented. TODO
 	
@@ -40,6 +31,10 @@ class Event:
 		self.triggerCell = TC #Measuring starts in trigger cell. 1024 cells on board.
 		#So TC is "Voltage bin 0" in binary file.
 		#Need to shift to match with times
+		
+		self.rawVoltages = [0]*1024 #List of 1024 2-byte integers. 0 is RC-0.5 V, 65535 is RC+0.5V
+		
+		self.channelList = []
 	
 	
 	"""Sets the raw voltages, from the program handling the binary file.
@@ -54,9 +49,9 @@ class Event:
 	"""Calculates the proper voltages, using the raw data as offset from the rangeCenter
 	"""
 	def calculateVoltages(self, currChannel):
-		for i in range(0, length(self.rawVoltages)):
+		for i in range(0, len(self.rawVoltages)):
 			index = (i + self.triggerCell)%1024 #To get correct list placement of new voltage
-			currChannel.voltages[index] = RC - 0.5 + self.rawVoltages[index]/65535.0
+			currChannel.voltages[index] = self.rangeCenter	 - 0.5 + self.rawVoltages[index]/65535.0
 			#Kan ta minus 0.5V på RC, och sen bara lägga till rawVolt/65535... väl?
 			
 			self.calculateTimes(currChannel, i) #Calculates the times for the cells in the current channel
@@ -68,14 +63,19 @@ class Event:
 	"""
 	def calculateTimes(self, channel, i):
 		j = 0
-		channel.times[i] = 0.0 #Start value
+		#i = 0 for trigger cell
+		index = (i + self.triggerCell)%1024 #To get correct list placement of time
+		channel.times[index] = 0.0 #Start value
 		#Then add together all the ones before!
 		while j < i:
-			channel.times[i] += channel.binWidth[(j + self.triggerCell)%1024]
+			channel.times[index] += channel.binWidth[(j + self.triggerCell)%1024]
 			j += 1
 			#Timing starts at trigger cell (?)
 			
 			
+	
+	
+	
 	
 	"""Cells have different absolute times in different channels.
 	Good idea to align them. Cell 0 is the same always (0.0).
