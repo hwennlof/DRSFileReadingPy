@@ -25,9 +25,12 @@ class Event:
 	
 	#time, to be implemented. TODO
 	
+	"""Constructor. Takes event serial number, range center (in millivolts), trigger cell number (0-1023)
+	OR IS IT 1-1024?? TODO
+	"""
 	def __init__(self, SN, RC, TC):
 		self.serialNumber = SN
-		self.rangeCenter = RC
+		self.rangeCenter = RC #In millivolts
 		self.triggerCell = TC #Measuring starts in trigger cell. 1024 cells on board.
 		#So TC is "Voltage bin 0" in binary file.
 		#Need to shift to match with times
@@ -35,6 +38,9 @@ class Event:
 		self.rawVoltages = [0]*1024 #List of 1024 2-byte integers. 0 is RC-0.5 V, 65535 is RC+0.5V
 		
 		self.channelList = []
+		
+		#print("Trigger cell:", TC)
+		print("Range center:", RC)
 	
 	
 	"""Sets the raw voltages, from the program handling the binary file.
@@ -51,8 +57,10 @@ class Event:
 	def calculateVoltages(self, currChannel):
 		for i in range(0, len(self.rawVoltages)):
 			index = (i + self.triggerCell)%1024 #To get correct list placement of new voltage
-			currChannel.voltages[index] = self.rangeCenter	 - 0.5 + self.rawVoltages[index]/65535.0
-			#Kan ta minus 0.5V på RC, och sen bara lägga till rawVolt/65535... väl?
+			currChannel.voltages[index] = self.rangeCenter/1000 - 0.5 + self.rawVoltages[i]/65535.0
+			#Rangecenter given in millivolts
+			#rawVoltages have trigger cell at index 0
+			#currChannel.voltages has cell 0 at index 0
 			
 			self.calculateTimes(currChannel, i) #Calculates the times for the cells in the current channel
 			
@@ -65,6 +73,7 @@ class Event:
 		j = 0
 		#i = 0 for trigger cell
 		index = (i + self.triggerCell)%1024 #To get correct list placement of time
+		#print("i:", i, ",", "index:", index)
 		channel.times[index] = 0.0 #Start value
 		#Then add together all the ones before!
 		while j < i:
@@ -72,8 +81,22 @@ class Event:
 			j += 1
 			#Timing starts at trigger cell (?)
 			
+		#print("Index:",index,",","Time:",channel.times[index])
 			
 	
+	"""Gets the times, starting with the trigger cell at index 0.
+	Takes channel number as argument.
+	"""
+	def getTimesTCStart(self, channelNo):
+		return (self.channelList[channelNo].times[self.triggerCell:] + 
+				self.channelList[channelNo].times[:self.triggerCell])
+		
+	"""Gets voltages, with trigger cell as index 0.
+	Takes channel number as argument.
+	"""
+	def getVoltagesTCStart(self, channelNo):
+		return (self.channelList[channelNo].voltages[self.triggerCell:] + 
+				self.channelList[channelNo].voltages[:self.triggerCell])
 	
 	
 	
