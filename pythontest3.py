@@ -3,7 +3,7 @@ from pyDRSread import *
 
 import struct
 
-FILENAME = "HW_507Test1.dat"
+FILENAME = "171006_test1_10Samples.dat"
 
 
 channelList = [] #List to be populated by the channels
@@ -77,7 +77,8 @@ def parseEvent(fileName):
 		#1024 2-byte integers.
 		inVoltages = []
 		for i in range(0, 1024):
-			inVoltages.append(struct.unpack("h", fil.read(2))[0])
+			inVoltages.append(struct.unpack("H", fil.read(2))[0])
+			#H instead of h! Important!!! h short, H unsigned short, which is what we have
 		
 		#print(inVoltages)
 		#Sets the voltages of the last event in the list (that is, the current event)
@@ -90,7 +91,7 @@ def parseEvent(fileName):
 			print("End of file reached")
 			return (b'0',b'0',b'0',b'0') #Returns "word" of zeroes
 		else:
-			print("Temp word is", tmpWord)
+			#print("Temp word is", tmpWord)
 			word = struct.unpack("cccc", tmpWord)
 		
 	#Here the event is over. Return word, so it can be used outside (needed at the point of call)
@@ -115,7 +116,7 @@ with open(FILENAME, "rb") as fil:
 	#Word 3 is channel header. Always at least one channel, so this is always here.
 	#4 chars, last one is channel number
 	channelNumber = int(struct.unpack("cccc", fil.read(wordSize))[3])
-	print("Channel number is", channelNumber)
+	#print("Channel number is", channelNumber)
 	#int() turns it into an int.
 	channelList.append(Channel(channelNumber)) #Creates new channel object
 	
@@ -123,31 +124,30 @@ with open(FILENAME, "rb") as fil:
 	#4-byte floating point format
 	channelList[channelCounter].setBinWidths(read1024Lines(fil, "f"))
 	
-	print(channelList[channelCounter].binWidth)
+	#print(channelList[channelCounter].binWidth)
 	
 	#Word 1028 is possibly another channel header.
 	#Definitely 4 chars. Check if channel header.
 	word = struct.unpack("cccc", fil.read(wordSize))
 	if word[0].decode("UTF-8") == "C": #decode() needed to convert from "byte char" to char
-		print("We have another channel!")
-		channelCounter += 1 #Increase the channel counter
-		#Want to do the whole channel thing again
-		channelNumber = int(word[3])
-		channelList.append(Channel(channelNumber)) #Creates new channel object
-		channelList[channelCounter].setBinWidths(read1024Lines(fil, "f"))
-		print(channelList[channelCounter].binWidth)
-	
-	#Might be another channel. I should really make a loop for this.
-	word = struct.unpack("cccc", fil.read(wordSize))
-	if word[0].decode("UTF-8") == "C": #decode() needed to convert from "byte char" to char
-		print("We have another channel!")
+		#print("We have another channel!")
 		channelCounter += 1 #Increase the channel counter
 		#Want to do the whole channel thing again
 		channelNumber = int(word[3])
 		channelList.append(Channel(channelNumber)) #Creates new channel object
 		channelList[channelCounter].setBinWidths(read1024Lines(fil, "f"))
 		#print(channelList[channelCounter].binWidth)
-		#Why does it keep being zero...
+	
+	#Might be another channel. I should really make a loop for this. TODO
+	word = struct.unpack("cccc", fil.read(wordSize))
+	if word[0].decode("UTF-8") == "C": #decode() needed to convert from "byte char" to char
+		#print("We have another channel!")
+		channelCounter += 1 #Increase the channel counter
+		#Want to do the whole channel thing again
+		channelNumber = int(word[3])
+		channelList.append(Channel(channelNumber)) #Creates new channel object
+		channelList[channelCounter].setBinWidths(read1024Lines(fil, "f"))
+		#print(channelList[channelCounter].binWidth)
 	else:
 		print(word)
 	
@@ -162,7 +162,9 @@ with open(FILENAME, "rb") as fil:
 		
 		
 	
-
+	#Shifts the times of the channels, so that the absolute times match
+	for event in eventList:
+		event.alignChannelTimes()
 
 
 

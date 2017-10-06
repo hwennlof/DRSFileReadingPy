@@ -58,6 +58,7 @@ class Event:
 		for i in range(0, len(self.rawVoltages)):
 			index = (i + self.triggerCell)%1024 #To get correct list placement of new voltage
 			currChannel.voltages[index] = self.rangeCenter/1000 - 0.5 + self.rawVoltages[i]/65535.0
+			#print(self.rawVoltages[i])
 			#Rangecenter given in millivolts
 			#rawVoltages have trigger cell at index 0
 			#currChannel.voltages has cell 0 at index 0
@@ -106,4 +107,11 @@ class Event:
 	"""
 	def alignChannelTimes(self):
 		t1 = self.channelList[0].times[0]
+		i = 1
+		while i < len(self.channelList):
+			dt = t1 - self.channelList[i].times[0]
+			#print(dt)
+			for j in range(0, 1024):
+				self.channelList[i].times[j] += dt
+			i += 1
 		

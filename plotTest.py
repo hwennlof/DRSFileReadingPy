@@ -8,8 +8,8 @@ x = eventList[5].channelList[1].times
 
 y = eventList[5].channelList[1].voltages
 
-for i in range(0, len(x)):
-	print(x[i], y[i])
+#for i in range(0, len(x)):
+#	print(x[i], y[i])
 
 plt.plot(x,y,'*')
 
@@ -26,7 +26,13 @@ x2 = np.linspace(0,1024, len(x))
 
 for i in range(0, len(eventList)):
 	plt.figure(i+1)
-	plt.plot(eventList[i].getTimesTCStart(1), eventList[i].getVoltagesTCStart(1), '.')
+	#plt.plot(eventList[i].getTimesTCStart(1), eventList[i].getVoltagesTCStart(1), '.')
+	chNo = 0
+	#plt.plot(eventList[i].channelList[chNo].times, eventList[i].channelList[chNo].voltages)
+	plt.plot(eventList[i].getTimesTCStart(chNo), eventList[i].getVoltagesTCStart(chNo), '-')
+	chNo = 1
+	#plt.plot(eventList[i].channelList[chNo].times, eventList[i].channelList[chNo].voltages,'r')
+	plt.plot(eventList[i].getTimesTCStart(chNo), eventList[i].getVoltagesTCStart(chNo), '-r')
 	plt.xlabel("Time [ns]")
 	plt.ylabel("Volts")
 	plt.show()
