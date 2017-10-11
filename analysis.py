@@ -2,6 +2,8 @@ import pickle
 import matplotlib.pyplot as plt
 
 
+#Run datatreatment.py first to get Pickle files to analyse!
+
 FILENAME = "./TreatedData/171006_test1_10Samples.pkl"
 
 

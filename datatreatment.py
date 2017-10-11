@@ -14,7 +14,8 @@ SAVEFILENAME = "./TreatedData/" + DATAFILENAME[:-4] #Same as data file name, jus
 
 fileReader = DRS4FileReader(DATAFILENAME)	
 
-fileReader.parseFile()
+fileReader.parseFile() #Parses the datafile.
+#All data ssaved in the fileReader object
 
 
 fileReader.saveAsPickle(SAVEFILENAME + ".pkl")
